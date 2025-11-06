@@ -208,7 +208,7 @@ def get_html(filename, logger=getLogger()):
 
     try:
         output = proc_run(
-            args=["xml2rfc", "--html", "--out", html_file, filename],
+            args=["xml2rfc", "--html", "--sortrefs", "--out", html_file, filename],
             capture_output=True,
         )
         output.check_returncode()
@@ -234,7 +234,7 @@ def get_text(filename, logger=getLogger()):
 
     try:
         output = proc_run(
-            args=["xml2rfc", "--text", "--out", text_file, filename],
+            args=["xml2rfc", "--text", "--sortrefs", "--out", text_file, filename],
             capture_output=True,
         )
         output.check_returncode()
@@ -262,7 +262,7 @@ def get_pdf(filename, logger=getLogger()):
 
     try:
         output = proc_run(
-            args=["xml2rfc", "--pdf", "--out", pdf_file, filename], capture_output=True
+            args=["xml2rfc", "--pdf", "--sortrefs", "--out", pdf_file, filename], capture_output=True
         )
         output.check_returncode()
     except RunnerError as e:  # pragma: no cover
