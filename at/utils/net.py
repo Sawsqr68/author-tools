@@ -39,73 +39,75 @@ def is_valid_url(url, allowed_domains=None, logger=getLogger()):
     return True
 
 
-def get_latest(doc, dt_latest_url, logger=getLogger()):
-    """Returns URL latest ID/RFC from Datatracker."""
-
+def _fetch_datatracker_info(doc, dt_latest_url, logger=getLogger()):
+    """Helper function to fetch document information from Datatracker.
+    
+    Args:
+        doc: Document name
+        dt_latest_url: Base URL for datatracker latest document API
+        logger: Logger instance
+        
+    Returns:
+        dict: JSON response data from datatracker
+        
+    Raises:
+        DocumentNotFound: If document is not found or response is invalid
+    """
     url = "/".join([dt_latest_url, doc])
     with get(url) as response:
         if response.status_code == OK:
-            try:
-                data = response.json()
-                latest_doc = data["content_url"]
-            except KeyError:
-                logger.error("can not find content_url for {}".format(url))
-                raise DocumentNotFound(
-                    "Can not find url for the latest document on " "datatracker"
-                )
+            return response.json()
         else:
             logger.error("can not find doc for {}".format(url))
             raise DocumentNotFound("Can not find the latest document on datatracker")
 
-        return latest_doc
+
+def get_latest(doc, dt_latest_url, logger=getLogger()):
+    """Returns URL latest ID/RFC from Datatracker."""
+    data = _fetch_datatracker_info(doc, dt_latest_url, logger)
+    try:
+        return data["content_url"]
+    except KeyError:
+        logger.error("can not find content_url for {}".format(doc))
+        raise DocumentNotFound(
+            "Can not find url for the latest document on " "datatracker"
+        )
 
 
 def get_previous(doc, dt_latest_url, logger=getLogger()):
     """Returns previous ID/RFC from datatracker"""
-    url = "/".join([dt_latest_url, doc])
-    with get(url) as response:
-        if response.status_code == OK:
-            try:
-                data = response.json()
-                previous_doc = data["previous"]
-            except KeyError:
-                logger.error("can not find content_url for {}".format(url))
-                raise DocumentNotFound(
-                    "Can not find url for the previous document on " "datatracker"
-                )
-        else:
-            logger.error("can not find doc for {}".format(url))
-            raise DocumentNotFound("Can not find the previous document on datatracker")
-
-        return get_latest(previous_doc, dt_latest_url, logger)
+    data = _fetch_datatracker_info(doc, dt_latest_url, logger)
+    try:
+        previous_doc = data["previous"]
+    except KeyError:
+        logger.error("can not find previous for {}".format(doc))
+        raise DocumentNotFound(
+            "Can not find url for the previous document on " "datatracker"
+        )
+    
+    return get_latest(previous_doc, dt_latest_url, logger)
 
 
 def get_both(doc, dt_latest_url, logger=getLogger()):
     """Returns urls of given doc  and previous ID/RFC from Datatracker."""
-
-    url = "/".join([dt_latest_url, doc])
-    with get(url) as response:
-        if response.status_code == OK:
-            try:
-                data = response.json()
-                latest_doc = data["content_url"]
-                try:
-                    previous_doc = data["previous_url"]
-                except KeyError:
-                    logger.error("Can not find previous_url for {}".format(url))
-                    raise DocumentNotFound(
-                        "Can not find url for previous document on " "datatracker"
-                    )
-            except KeyError:
-                logger.error("can not find content_url for {}".format(url))
-                raise DocumentNotFound(
-                    "Can not find url for the latest document on " "datatracker"
-                )
-        else:
-            logger.error("can not find doc for {}".format(url))
-            raise DocumentNotFound("Can not find the latest document on datatracker")
-
-        return (previous_doc, latest_doc)
+    data = _fetch_datatracker_info(doc, dt_latest_url, logger)
+    try:
+        latest_doc = data["content_url"]
+    except KeyError:
+        logger.error("can not find content_url for {}".format(doc))
+        raise DocumentNotFound(
+            "Can not find url for the latest document on " "datatracker"
+        )
+    
+    try:
+        previous_doc = data["previous_url"]
+    except KeyError:
+        logger.error("Can not find previous_url for {}".format(doc))
+        raise DocumentNotFound(
+            "Can not find url for previous document on " "datatracker"
+        )
+    
+    return (previous_doc, latest_doc)
 
 
 def is_url(string):
