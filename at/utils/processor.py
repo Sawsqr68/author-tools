@@ -200,85 +200,70 @@ def get_xml(filename, logger=getLogger()):
     return (filename, logs)
 
 
+def _run_xml2rfc_conversion(filename, output_format, logger=getLogger()):
+    """Helper function to run xml2rfc conversion with common error handling.
+    
+    Args:
+        filename: Input XML filename
+        output_format: Output format (html, text, pdf)
+        logger: Logger instance
+        
+    Returns:
+        Tuple of (output_file, processed_logs)
+    """
+    format_extension_map = {
+        "html": "html",
+        "text": "txt",
+        "pdf": "pdf"
+    }
+    
+    format_flag_map = {
+        "html": "--html",
+        "text": "--text",
+        "pdf": "--pdf"
+    }
+    
+    ext = format_extension_map[output_format]
+    flag = format_flag_map[output_format]
+    output_file = get_filename(filename, ext)
+
+    try:
+        output = proc_run(
+            args=["xml2rfc", flag, "--out", output_file, filename],
+            capture_output=True,
+        )
+        output.check_returncode()
+    except RunnerError as e:  # pragma: no cover
+        logger.info(f"process error: {str(e)}")
+        raise ProcessingError(str(e))
+    except CalledProcessError:
+        errors = get_errors(output, filename)
+        if errors:
+            logger.info("xml2rfc {} error: {}".format(output_format, errors))
+        else:
+            errors = "{} generation error".format(output_format)
+            logger.info("xml2rfc {} error: no error output".format(output_format))
+        raise ProcessingError(errors)
+
+    logger.info("new file saved at {}".format(output_file))
+    return (output_file, process_xml2rfc_log(output, filename))
+
+
 def get_html(filename, logger=getLogger()):
     """Render HTML"""
     logger.debug("running xml2rfc html converter")
-
-    html_file = get_filename(filename, "html")
-
-    try:
-        output = proc_run(
-            args=["xml2rfc", "--html", "--out", html_file, filename],
-            capture_output=True,
-        )
-        output.check_returncode()
-    except RunnerError as e:  # pragma: no cover
-        logger.info(f"process error: {str(e)}")
-        raise ProcessingError(str(e))
-    except CalledProcessError:
-        errors = get_errors(output, filename)
-        if errors:
-            logger.info("xml2rfc html error: {}".format(errors))
-        else:
-            errors = "html generation error"
-            logger.info("xml2rfc html error: no error output")
-        raise ProcessingError(errors)
-
-    logger.info("new file saved at {}".format(html_file))
-    return (html_file, process_xml2rfc_log(output, filename))
+    return _run_xml2rfc_conversion(filename, "html", logger)
 
 
 def get_text(filename, logger=getLogger()):
-
-    text_file = get_filename(filename, "txt")
-
-    try:
-        output = proc_run(
-            args=["xml2rfc", "--text", "--out", text_file, filename],
-            capture_output=True,
-        )
-        output.check_returncode()
-    except RunnerError as e:  # pragma: no cover
-        logger.info(f"process error: {str(e)}")
-        raise ProcessingError(str(e))
-    except CalledProcessError:
-        errors = get_errors(output, filename)
-        if errors:
-            logger.info("xml2rfc text error: {}".format(errors))
-        else:
-            errors = "text generation error"
-            logger.info("xml2rfc text error: no error output")
-        raise ProcessingError(errors)
-
-    logger.info("new file saved at {}".format(text_file))
-    return (text_file, process_xml2rfc_log(output, filename))
+    """Render text"""
+    return _run_xml2rfc_conversion(filename, "text", logger)
 
 
 def get_pdf(filename, logger=getLogger()):
     """Render PDF"""
     logger.debug("running xml2rfc pdf converter")
-
-    pdf_file = get_filename(filename, "pdf")
-
-    try:
-        output = proc_run(
-            args=["xml2rfc", "--pdf", "--out", pdf_file, filename], capture_output=True
-        )
-        output.check_returncode()
-    except RunnerError as e:  # pragma: no cover
-        logger.info(f"process error: {str(e)}")
-        raise ProcessingError(str(e))
-    except CalledProcessError:
-        errors = get_errors(output, filename)
-        if errors:
-            logger.info("xml2rfc pdf error: {}".format(errors))
-        else:
-            errors = "pdf generation error"
-            logger.info("xml2rfc pdf error: no error output")
-        raise ProcessingError(errors)
-
-    logger.info("new file saved at {}".format(pdf_file))
-    return (pdf_file, process_xml2rfc_log(output, filename))
+    return _run_xml2rfc_conversion(filename, "pdf", logger)
 
 
 def clean_svg_ids(filename, logger=getLogger()):

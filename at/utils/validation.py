@@ -6,7 +6,7 @@ from lxml.etree import XMLSyntaxError
 
 from at.utils.file import cleanup_output, get_extension, get_filename
 from at.utils.logs import process_xml2rfc_log
-from at.utils.processor import process_file, ProcessingError
+from at.utils.processor import convert_v2v3, process_file, ProcessingError
 from at.utils.text import get_text_id_from_file
 from at.utils.runner import proc_run, RunnerError
 
@@ -46,8 +46,7 @@ def validate_xml(filename, logger=getLogger()):
         v2_processed_log = None
 
         if xml2rfc_version == "2":
-            filename, output = convert_v2v3(filename, logger)
-            v2_processed_log = process_xml2rfc_log(output, filename)
+            filename, v2_processed_log = convert_v2v3(filename, logger)
 
     except XMLSyntaxError as e:
         logger.info("xml2rfc error: {}".format(str(e)))
@@ -90,34 +89,6 @@ def xml2rfc_validation(filename, logger=getLogger()):
             logger.info("xml2rfc error: no stderr output")
 
     return (output, text_file)
-
-
-def convert_v2v3(filename, logger=getLogger()):
-    """Convert XML2RFC v2 file to v3 and return file name output"""
-
-    logger.debug("converting v2 XML to v3 XML")
-
-    xml_file = get_filename(filename, "xml")
-
-    try:
-        output = proc_run(
-            args=["xml2rfc", "--v2v3", "--out", xml_file, filename], capture_output=True
-        )
-        output.check_returncode()
-    except RunnerError as e:  # pragma: no cover
-        logger.info(f"process error: {str(e)}")
-        raise ProcessingError(str(e))
-    except CalledProcessError:
-        if output.stderr:
-            error = output.stderr.decode("utf-8")
-            logger.info("xml2rfc v2v3 error: {}".format(error))
-        else:
-            error = "v2v3 conversion error"
-            logger.info("xml2rfc v2v3 error: no stderr output")
-        raise ProcessingError(error)
-
-    logger.info("new file saved at {}".format(xml_file))
-    return xml_file, output
 
 
 def idnits(
