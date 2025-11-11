@@ -82,9 +82,18 @@ class TestUtilsValidation(TestCase):
             "".join([TEMPORARY_DATA_DIR, TEST_XML_V2_DRAFT])
         )
 
+        # Verify the file was created
         self.assertTrue(Path(saved_file).exists())
         self.assertEqual(Path(saved_file).suffix, ".xml")
+        
+        # Verify logs structure matches new behavior
         self.assertIsInstance(logs, dict)
+        self.assertIn("errors", logs.keys())
+        self.assertIn("warnings", logs.keys())
+        self.assertIn("bare_unicode", logs.keys())
+        self.assertIsInstance(logs["errors"], list)
+        self.assertIsInstance(logs["warnings"], list)
+        self.assertIsInstance(logs["bare_unicode"], list)
 
     def test_idnits(self):
         output, text_file = xml2rfc_validation(
