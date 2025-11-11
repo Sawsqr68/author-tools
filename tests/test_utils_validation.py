@@ -6,8 +6,8 @@ from unittest import TestCase
 
 from werkzeug.datastructures import FileStorage
 
+from at.utils.processor import convert_v2v3
 from at.utils.validation import (
-    convert_v2v3,
     get_non_ascii_chars,
     idnits,
     svgcheck,
@@ -78,13 +78,13 @@ class TestUtilsValidation(TestCase):
         self.assertIsInstance(output, CompletedProcess)
 
     def test_convert_v2v3(self):
-        saved_file, output = convert_v2v3(
+        saved_file, logs = convert_v2v3(
             "".join([TEMPORARY_DATA_DIR, TEST_XML_V2_DRAFT])
         )
 
         self.assertTrue(Path(saved_file).exists())
         self.assertEqual(Path(saved_file).suffix, ".xml")
-        self.assertIsInstance(output, CompletedProcess)
+        self.assertIsInstance(logs, dict)
 
     def test_idnits(self):
         output, text_file = xml2rfc_validation(
