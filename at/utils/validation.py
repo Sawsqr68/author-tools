@@ -208,7 +208,7 @@ def svgcheck(filename, logger=getLogger()):
             result = output.stderr.decode("utf-8", errors="ignore")
 
         with open(parsed_svg_file) as file:
-            parsed_svg = "\n".join(file.readlines())
+            parsed_svg = file.read()
 
     return (
         parsed_svg,
