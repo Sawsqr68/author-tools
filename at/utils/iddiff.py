@@ -41,34 +41,23 @@ def get_id_diff(
         ]
 
     try:
+        # Build args list efficiently without repeated concatenations
         if wdiff:
-            output = proc_run(
-                args=diff + ["--hwdiff", old_draft, new_draft],
-                timeout=TIMEOUT,
-                capture_output=True,
-            )
+            diff.extend(["--hwdiff", old_draft, new_draft])
         elif chbars:
-            output = proc_run(
-                args=diff + ["--chbars", old_draft, new_draft],
-                timeout=TIMEOUT,
-                capture_output=True,
-            )
+            diff.extend(["--chbars", old_draft, new_draft])
         elif abdiff:
-            output = proc_run(
-                args=diff + ["--abdiff", old_draft, new_draft],
-                timeout=TIMEOUT,
-                capture_output=True,
-            )
+            diff.extend(["--abdiff", old_draft, new_draft])
         elif table and diff_tool == "iddiff":
-            output = proc_run(
-                args=diff + ["-t", old_draft, new_draft],
-                timeout=TIMEOUT,
-                capture_output=True,
-            )
+            diff.extend(["-t", old_draft, new_draft])
         else:
-            output = proc_run(
-                args=diff + [old_draft, new_draft], timeout=TIMEOUT, capture_output=True
-            )
+            diff.extend([old_draft, new_draft])
+        
+        output = proc_run(
+            args=diff,
+            timeout=TIMEOUT,
+            capture_output=True,
+        )
         output.check_returncode()
     except RunnerError as e:
         if diff_tool == "rfcdiff":

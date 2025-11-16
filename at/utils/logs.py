@@ -22,23 +22,31 @@ def process_xml2rfc_log(output, filename):
         ).split("\n")
 
     for entry in log:
-        error = XML2RFC_ERROR_REGEX.search(entry)
-        warning = XML2RFC_WARN_REGEX.search(entry)
-        line = XML2RFC_LINE_NUMBER_REGEX.search(entry)
-        if error and (message := error.group("message")):
-            if line and (line := line.group("line")):
-                errors.append(f"({line}) {message}")
+        # Extract line number once
+        line_match = XML2RFC_LINE_NUMBER_REGEX.search(entry)
+        line_num = line_match.group("line") if line_match else None
+        
+        # Check for error or warning
+        error_match = XML2RFC_ERROR_REGEX.search(entry)
+        if error_match:
+            message = error_match.group("message")
+            if line_num:
+                errors.append(f"({line_num}) {message}")
             else:
                 errors.append(message)
-        elif warning and (message := warning.group("message")):
+            continue
+        
+        warning_match = XML2RFC_WARN_REGEX.search(entry)
+        if warning_match:
+            message = warning_match.group("message")
             if "Found non-ascii characters" in message:
-                if line and (line := line.group("line")):
-                    unicode.append(f"({line}) {message}")
+                if line_num:
+                    unicode.append(f"({line_num}) {message}")
                 else:
-                    warnings.append(message)
+                    unicode.append(message)
             else:
-                if line and (line := line.group("line")):
-                    warnings.append(f"({line}) {message}")
+                if line_num:
+                    warnings.append(f"({line_num}) {message}")
                 else:
                     warnings.append(message)
 

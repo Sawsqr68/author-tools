@@ -103,13 +103,13 @@ def save_file_from_url(url, upload_dir, logger=getLogger()):
     filename = path.join(dir_path, save_filename)
 
     try:
-        with get(url) as response:
-            if response.status_code == OK:
-                with open(filename, "w") as file:
-                    file.write(response.text)
-            else:
-                logger.error("Error downloading file: {}".format(url))
-                raise DownloadError("Error occured while downloading file.")
+        response = get(url)
+        if response.status_code == OK:
+            with open(filename, "w") as file:
+                file.write(response.text)
+        else:
+            logger.error("Error downloading file: {}".format(url))
+            raise DownloadError("Error occured while downloading file.")
 
         return (dir_path, filename)
     except (ConnectionError, Timeout) as e:
@@ -140,12 +140,17 @@ def get_name_with_revision(filename):
 def cleanup_output(filename, output):
     """Return output without directory information"""
 
-    if output:
-        return output.replace(path.dirname(filename) + "/", "").replace(
-            path.dirname(path.relpath(filename)) + "/", ""
-        )
-    else:
+    if not output:
         return None
+    
+    dirname = path.dirname(filename)
+    if dirname:
+        output = output.replace(dirname + "/", "")
+        rel_dirname = path.dirname(path.relpath(filename))
+        if rel_dirname and rel_dirname != dirname:
+            output = output.replace(rel_dirname + "/", "")
+    
+    return output
 
 
 @decorator
