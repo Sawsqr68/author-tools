@@ -155,15 +155,9 @@ def idnits():
 
     url = request.values.get("url", "").strip()
     verbose = request.values.get("verbose", "0").strip()
-    if request.values.get("hidetext", False):
-        show_text = False
-    else:
-        show_text = True
+    show_text = not request.values.get("hidetext", False)
     year = request.values.get("year", "").strip()
-    if request.values.get("submitcheck", False):
-        submit_check = True
-    else:
-        submit_check = False
+    submit_check = bool(request.values.get("submitcheck", False))
 
     if request.method == "POST":
         if "file" not in request.files:
@@ -226,35 +220,12 @@ def id_diff():
     url_2 = request.values.get("url_2", "").strip()
     latest = request.values.get("latest", "").strip()
 
-    if request.values.get("raw", False):
-        raw = True
-    else:
-        raw = False
-
-    if request.values.get("table", False):
-        table = True
-    else:
-        table = False
-
-    if request.values.get("wdiff", False):
-        wdiff = True
-    else:
-        wdiff = False
-
-    if request.values.get("chbars", False):
-        chbars = True
-    else:
-        chbars = False
-
-    if request.values.get("abdiff", False):
-        abdiff = True
-    else:
-        abdiff = False
-
-    if request.values.get("iddiff", False):
-        diff_tool = "iddiff"
-    else:
-        diff_tool = "rfcdiff"
+    raw = bool(request.values.get("raw", False))
+    table = bool(request.values.get("table", False))
+    wdiff = bool(request.values.get("wdiff", False))
+    chbars = bool(request.values.get("chbars", False))
+    abdiff = bool(request.values.get("abdiff", False))
+    diff_tool = "iddiff" if request.values.get("iddiff", False) else "rfcdiff"
 
     # rfcdiff compantibility
     url1 = request.values.get("url1", "").strip()
